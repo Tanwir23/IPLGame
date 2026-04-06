@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IPL Quiz Ultimate</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: linear-gradient(135deg, #ff416c, #ff4b2b, #1e3c72);
+      color: white;
+      text-align: center;
+      padding: 15px;
+    }
+
+    .box {
+      max-width: 420px;
+      margin: auto;
+      background: rgba(0,0,0,0.85);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 25px #00f2ff;
+    }
+
+    .logo { width: 120px; }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .progress {
+      height: 6px;
+      background: #333;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .bar {
+      height: 100%;
+      width: 100%;
+      background: #00e5ff;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      background: #222;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn:hover { background: #00c3ff; }
+    .btn:active { transform: scale(0.95); }
+
+    .correct { background: #00e676 !important; }
+    .wrong { background: #ff1744 !important; }
+
+    img {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    .shake { animation: shake 0.3s; }
+    @keyframes shake {
+      0%{transform:translateX(0);}
+      25%{transform:translateX(-5px);}
+      50%{transform:translateX(5px);}
+      75%{transform:translateX(-5px);}
+      100%{transform:translateX(0);}
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box" id="box">
+
+<img class="logo" src="https://upload.wikimedia.org/wikipedia/en/6/67/IPL_Logo.png">
+<h2>🔥 IPL Quiz Ultimate</h2>
+
+<div class="top">
+  <div>Score: <span id="score">0</span></div>
+  <div>🔥 <span id="streak">0</span></div>
+  <div>⏱ <span id="time">8</span></div>
+</div>
+
+<div class="progress"><div class="bar" id="bar"></div></div>
+
+<img id="img">
+<h3 id="q"></h3>
+
+<button class="btn" id="o0" onclick="answer(0)"></button>
+<button class="btn" id="o1" onclick="answer(1)"></button>
+<button class="btn" id="o2" onclick="answer(2)"></button>
+<button class="btn" id="o3" onclick="answer(3)"></button>
+
+</div>
+
+<audio id="correctSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+<audio id="wrongSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+
+<script>
+let score=0, streak=0, current=0;
+let timer, timeLeft=8;
+let correctIndex=0;
+
+const quiz = [
+{q:"IPL 2023 winner?",img:"https://upload.wikimedia.org/wikipedia/en/2/2e/Chennai_Super_Kings_Logo.svg",options:["CSK","GT","MI","RR"],answer:"CSK"},
+{q:"Orange Cap 2023?",img:"https://upload.wikimedia.org/wikipedia/commons/6/6e/Shubman_Gill.jpg",options:["Gill","Kohli","Faf","Warner"],answer:"Gill"},
+{q:"Purple Cap 2023?",img:"https://upload.wikimedia.org/wikipedia/commons/2/2c/Mohammed_Shami.jpg",options:["Shami","Bumrah","Rashid","Siraj"],answer:"Shami"},
+{q:"Hardik Pandya team 2024?",img:"https://upload.wikimedia.org/wikipedia/commons/8/8c/Hardik_Pandya.jpg",options:["MI","GT","CSK","RCB"],answer:"MI"},
+{q:"Mitchell Starc team 2024?",img:"https://upload.wikimedia.org/wikipedia/commons/0/0b/Mitchell_Starc.jpg",options:["KKR","MI","CSK","RCB"],answer:"KKR"},
+{q:"Pat Cummins captain of?",img:"https://upload.wikimedia.org/wikipedia/commons/5/5c/Pat_Cummins.jpg",options:["SRH","MI","GT","CSK"],answer:"SRH"},
+{q:"Highest runs IPL 2023?",img:"https://upload.wikimedia.org/wikipedia/commons/6/6e/Shubman_Gill.jpg",options:["Gill","Kohli","Faf","Warner"],answer:"Gill"},
+{q:"Explosive team 2024?",img:"https://upload.wikimedia.org/wikipedia/en/6/6c/Sunrisers_Hyderabad_Logo.svg",options:["SRH","MI","CSK","RR"],answer:"SRH"},
+{q:"Fastest 50 IPL 2024?",img:"https://upload.wikimedia.org/wikipedia/commons/4/4c/Travis_Head.jpg",options:["Head","Russell","Maxwell","Pooran"],answer:"Head"},
+{q:"Player returned to MI 2024?",img:"https://upload.wikimedia.org/wikipedia/commons/8/8c/Hardik_Pandya.jpg",options:["Hardik","Pollard","Malinga","Boult"],answer:"Hardik"},
+{q:"Ahmedabad team?",img:"https://upload.wikimedia.org/wikipedia/en/0/09/Gujarat_Titans_Logo.svg",options:["GT","MI","CSK","KKR"],answer:"GT"},
+{q:"Lucknow team?",img:"https://upload.wikimedia.org/wikipedia/en/3/3a/Lucknow_Super_Giants_Logo.svg",options:["LSG","RR","PBKS","GT"],answer:"LSG"},
+{q:"Purple jersey team?",img:"https://upload.wikimedia.org/wikipedia/en/4/4c/Kolkata_Knight_Riders_Logo.svg",options:["KKR","CSK","MI","RR"],answer:"KKR"},
+{q:"'Ee Sala Cup Namde' team?",img:"https://upload.wikimedia.org/wikipedia/en/4/47/Royal_Challengers_Bangalore_Logo.svg",options:["RCB","CSK","MI","KKR"],answer:"RCB"},
+{q:"Travis Head team 2024?",img:"https://upload.wikimedia.org/wikipedia/commons/4/4c/Travis_Head.jpg",options:["SRH","MI","CSK","RR"],answer:"SRH"},
+{q:"MI key batsman 2024?",img:"https://upload.wikimedia.org/wikipedia/commons/3/3f/Virat_Kohli.jpg",options:["Surya","Rohit","Hardik","Tim David"],answer:"Surya"},
+{q:"'Korbo Lorbo Jeetbo' team?",img:"https://upload.wikimedia.org/wikipedia/en/4/4c/Kolkata_Knight_Riders_Logo.svg",options:["KKR","MI","CSK","RR"],answer:"KKR"}
+];
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+}
+
+function loadQ(){
+  let q=quiz[current];
+  document.getElementById("q").innerText=q.q;
+  document.getElementById("img").src=q.img;
+
+  let opts=[...q.options];
+  shuffle(opts);
+
+  opts.forEach((opt,i)=>{
+    document.getElementById("o"+i).innerText=opt;
+    document.getElementById("o"+i).classList.remove("correct","wrong");
+    if(opt===q.answer) correctIndex=i;
+  });
+
+  timeLeft=8;
+  document.getElementById("time").innerText=timeLeft;
+  updateBar();
+
+  timer=setInterval(()=>{
+    timeLeft--;
+    document.getElementById("time").innerText=timeLeft;
+    updateBar();
+
+    if(timeLeft===0){
+      clearInterval(timer);
+      streak=0;
+      next();
+    }
+  },1000);
+}
+
+function updateBar(){
+  document.getElementById("bar").style.width=(timeLeft/8*100)+"%";
+}
+
+function answer(i){
+  clearInterval(timer);
+
+  if(i===correctIndex){
+    score++; streak++;
+    document.getElementById("correctSound").play();
+    document.getElementById("o"+i).classList.add("correct");
+  } else {
+    streak=0;
+    document.getElementById("wrongSound").play();
+    document.getElementById("box").classList.add("shake");
+    setTimeout(()=>document.getElementById("box").classList.remove("shake"),300);
+
+    document.getElementById("o"+i).classList.add("wrong");
+    document.getElementById("o"+correctIndex).classList.add("correct");
+  }
+
+  document.getElementById("score").innerText=score;
+  document.getElementById("streak").innerText=streak;
+
+  setTimeout(next,800);
+}
+
+function next(){
+  current++;
+  if(current<quiz.length){
+    loadQ();
+  } else {
+    document.querySelector(".box").innerHTML=`
+      <h2>🏆 Final Score: ${score}</h2>
+      <h3>🔥 Best Streak: ${streak}</h3>
+      <button onclick="location.reload()">Play Again</button>
+    `;
+  }
+}
+
+loadQ();
+</script>
+
+</body>
+</html>
